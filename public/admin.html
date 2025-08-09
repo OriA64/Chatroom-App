@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Chatroom</title>
+    <link rel="stylesheet" href="admin-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-panel">
+            <div class="header">
+                <h1>🛠️ Admin Dashboard</h1>
+                <p>Chatroom User Management</p>
+                <button id="refresh-btn" class="refresh-btn">🔄 Refresh Data</button>
+            </div>
+            
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-users">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="recent-logins">0</div>
+                    <div class="stat-label">Recent Logins (24h)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="new-users">0</div>
+                    <div class="stat-label">New Users (24h)</div>
+                </div>
+            </div>
+            
+            <div class="users-section">
+                <h2>👥 All Users</h2>
+                <div class="table-container">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created At</th>
+                                <th>Last Login</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <tr>
+                                <td colspan="4" class="no-data">Loading user data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="actions-section">
+                <h2>⚙️ Quick Actions</h2>
+                <div class="action-buttons">
+                    <button id="export-btn" class="action-btn">📊 Export User Data</button>
+                    <button id="clear-old-btn" class="action-btn danger">🗑️ Clear Old Sessions</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="background-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+    </div>
+    
+    <script src="admin-script.js"></script>
+</body>
+</html>

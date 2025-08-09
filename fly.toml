@@ -1,0 +1,28 @@
+# fly.toml file for your chatroom app
+app = "chatroom-app-123"  # Will be replaced with your app name
+
+[build]
+  buildpacks = ["gcr.io/paketo-buildpacks/nodejs"]
+
+[env]
+  NODE_ENV = "production"
+  # Add your MongoDB URI and SESSION_SECRET in fly.io dashboard
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/"
+    protocol = "http"
+    tls_skip_verify = false
+
+    [http_service.checks.headers]
+      Content-Type = "text/html; charset=utf-8"

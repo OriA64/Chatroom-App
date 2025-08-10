@@ -1,3 +1,6 @@
+// Import the API configuration
+import { API_CONFIG } from './config.js';
+
 document.addEventListener('DOMContentLoaded', function() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const authForms = document.querySelectorAll('.auth-form');

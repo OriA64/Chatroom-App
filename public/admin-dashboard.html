@@ -71,78 +71,99 @@
         </div>
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check admin authentication
-            if (!localStorage.getItem('adminToken')) {
-                window.location.href = '/admin-login.html';
-                return;
-            }
+    <script type="module">
+        import { API_CONFIG } from './config.js';
 
+        // Global variables
+        const usersTbody = document.getElementById('users-tbody');
+        const totalUsersEl = document.getElementById('total-users');
+        const recentLoginsEl = document.getElementById('recent-logins');
+        const newUsersEl = document.getElementById('new-users');
+        let usersData = [];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize the dashboard
+            await initDashboard();
+        });
+
+        // Check admin authentication
+        async function checkAdminAuth() {
+            try {
+                const response = await fetch(API_CONFIG.getUrl(API_CONFIG.ENDPOINTS.ADMIN_STATS), {
+                    credentials: 'include'  // Important for sending cookies
+                });
+                
+                if (!response.ok) {
+                    window.location.href = '/admin-login.html';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/admin-login.html';
+                return false;
+            }
+        }
+        
+        // Initialize the dashboard
+        async function initDashboard() {
+            const isAuthenticated = await checkAdminAuth();
+            if (!isAuthenticated) return;
+            
+            setupEventListeners();
+            await loadUserData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(loadUserData, 30000);
+        }
+        
+        function setupEventListeners() {
             const refreshBtn = document.getElementById('refresh-btn');
+            const logoutBtn = document.getElementById('logout-btn');
             const exportBtn = document.getElementById('export-btn');
             const viewApiBtn = document.getElementById('view-api-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const usersTableBody = document.getElementById('users-tbody');
-            const totalUsersEl = document.getElementById('total-users');
-            const recentLoginsEl = document.getElementById('recent-logins');
-            const newUsersEl = document.getElementById('new-users');
-
-            // Set admin name if available
-            const adminName = localStorage.getItem('adminName');
-            if (adminName) {
-                const welcomeEl = document.querySelector('.header p');
-                if (welcomeEl) {
-                    welcomeEl.textContent = `Chatroom User Management - Welcome, ${adminName}!`;
-                }
+            
+            if (refreshBtn) refreshBtn.addEventListener('click', loadUserData);
+            
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function() {
+                    try {
+                        await fetch(API_CONFIG.getUrl(API_CONFIG.ENDPOINTS.ADMIN_LOGOUT), {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                    window.location.href = '/admin-login.html';
+                });
+            }
+            
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportUserData);
             }
 
-            // Event Listeners
-            refreshBtn.addEventListener('click', loadUserData);
-            exportBtn.addEventListener('click', exportUserData);
-            viewApiBtn.addEventListener('click', () => window.open('/api/stats', '_blank'));
+            if (viewApiBtn) {
+                viewApiBtn.addEventListener('click', () => {
+                    window.open(API_CONFIG.getUrl(API_CONFIG.ENDPOINTS.ADMIN_STATS), '_blank');
+                });
+            }
+        }
 
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                        }
-                    });
-                } catch (error) {
-                    console.error('Logout error:', error);
-                }
+        async function loadUserData() {
+            try {
+                const response = await fetch(API_CONFIG.getUrl(API_CONFIG.ENDPOINTS.ADMIN_STATS), {
+                    credentials: 'include'  // Important for sending cookies
+                });
                 
-                // Clear local storage
-                localStorage.removeItem('adminToken');
-                localStorage.removeItem('adminName');
-                
-                // Redirect to login
-                window.location.href = '/admin-login.html';
-            });
-
-            // Initial load
-            loadUserData();
-
-            async function loadUserData() {
-                try {
-                    const response = await fetch('/api/stats', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            // Unauthorized - redirect to login
-                            localStorage.removeItem('adminToken');
-                            window.location.href = '/admin-login.html';
-                            return;
-                        }
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Unauthorized - redirect to login
+                        window.location.href = '/admin-login.html';
+                        return;
                     }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                     
                     const data = await response.json();
 
@@ -153,6 +174,9 @@
 
                     // Update users table
                     updateUsersTable(data.users || []);
+                    
+                    // Store users data for export
+                    usersData = data.users || [];
 
                 } catch (error) {
                     console.error('Failed to load user data:', error);

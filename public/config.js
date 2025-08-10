@@ -5,9 +5,17 @@ export const API_CONFIG = {
   
   // API endpoints
   ENDPOINTS: {
+    // Auth endpoints
     LOGIN: '/api/login',
     SIGNUP: '/api/signup',
     LOGOUT: '/api/logout',
+    
+    // Admin endpoints
+    ADMIN_LOGIN: '/api/admin/login',
+    ADMIN_LOGOUT: '/api/admin/logout',
+    ADMIN_STATS: '/api/stats',
+    
+    // General endpoints
     STATS: '/api/stats'
   },
   

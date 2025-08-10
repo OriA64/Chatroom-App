@@ -44,35 +44,61 @@
         </div>
     </div>
     
-    <script>
+    <script type="module">
+        import { API_CONFIG } from './config.js';
+
         document.addEventListener('DOMContentLoaded', function() {
             const adminLoginForm = document.getElementById('admin-login-form');
             const messageDiv = document.getElementById('message');
 
-            // Check if already admin authenticated
-            if (localStorage.getItem('isAdminAuthenticated') === 'true') {
-                window.location.href = '/admin-dashboard.html';
-                return;
+            // Check if already admin authenticated by trying to access protected endpoint
+            async function checkAdminAuth() {
+                try {
+                    const response = await fetch(API_CONFIG.getUrl(API_CONFIG.ENDPOINTS.ADMIN_STATS), {
+                        credentials: 'include'  // Important for sending cookies
+                    });
+                    
+                    if (response.ok) {
+                        window.location.href = '/admin-dashboard.html';
+                    }
+                } catch (error) {
+                    console.log('Not authenticated as admin');
+                }
             }
+
+            // Check auth status on page load
+            checkAdminAuth();
 
             adminLoginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const formData = new FormData(adminLoginForm);
-                const name = formData.get('name');
+                const username = formData.get('name');
                 const password = formData.get('password');
 
-                // Check admin credentials
-                if (name === 'Ori' && password === 'Cheese987632!') {
-                    showMessage('Admin access granted!', 'success');
-                    localStorage.setItem('isAdminAuthenticated', 'true');
-                    localStorage.setItem('adminLoginTime', new Date().toISOString());
-                    
-                    setTimeout(() => {
-                        window.location.href = '/admin-dashboard.html';
-                    }, 1000);
-                } else {
-                    showMessage('Invalid admin credentials', 'error');
+                try {
+                    const response = await fetch(API_CONFIG.getUrl('/api/admin/login'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username, password }),
+                        credentials: 'include'  // Important for cookies
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showMessage('Admin access granted!', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/admin-dashboard.html';
+                        }, 1000);
+                    } else {
+                        showMessage(result.error || 'Invalid admin credentials', 'error');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage('An error occurred. Please try again.', 'error');
                 }
             });
 

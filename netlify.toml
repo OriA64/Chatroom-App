@@ -2,6 +2,10 @@
   publish = "public"
   command = ""  # No build command needed for static files
 
+# Disable secrets scanning for our environment variables
+[secrets]
+  scan = false
+
 [build.environment]
   NODE_VERSION = "18"
 

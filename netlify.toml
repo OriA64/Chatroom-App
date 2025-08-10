@@ -1,15 +1,11 @@
 [build]
   publish = "public"
-  command = "npm run build"
+  command = ""  # No build command needed for static files
 
 [build.environment]
   NODE_VERSION = "18"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
+# Redirects for client-side routing
 [[redirects]]
   from = "/admin"
   to = "/admin-login.html"
@@ -25,10 +21,8 @@
   to = "/admin-dashboard.html"
   status = 200
 
+# Catch-all for client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[functions]
-  directory = "netlify/functions"

@@ -98,40 +98,71 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// Get user statistics (for admin/debugging)
-app.get('/api/stats', (req, res) => {
+// Admin authentication middleware
+const requireAdmin = (req, res, next) => {
+  // In a real app, you'd check if the user is an admin
+  // For now, we'll just check if the user is logged in
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
+// Admin login
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  // In a real app, you'd verify admin credentials here
+  // For now, we'll use a simple hardcoded admin user
+  if (username === 'admin' && password === process.env.ADMIN_PASSWORD) {
+    req.session.admin = { username: 'admin' };
+    return res.json({ success: true, message: 'Admin login successful' });
+  }
+  
+  res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+});
+
+// Admin logout
+app.post('/api/admin/logout', (req, res) => {
+  delete req.session.admin;
+  res.json({ success: true, message: 'Admin logged out' });
+});
+
+// Get user statistics (for admin)
+app.get('/api/stats', requireAdmin, async (req, res) => {
   try {
-    const totalUsers = db.getUserCount();
-    const users = db.getAllUsers();
+    const users = await db.getAllUsers();
+    const totalUsers = users.length;
     
     // Calculate recent logins (last 24 hours)
     const now = new Date();
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
     const recentLogins = users.filter(user => {
-      if (!user.last_login) return false;
-      const lastLogin = new Date(user.last_login);
-      return lastLogin > yesterday;
+      return user.last_login && new Date(user.last_login) > yesterday;
     }).length;
     
     const newUsers = users.filter(user => {
-      const createdAt = new Date(user.created_at);
-      return createdAt > yesterday;
+      return new Date(user.created_at) > yesterday;
     }).length;
 
     res.json({
+      success: true,
       totalUsers,
       recentLogins,
       newUsers,
       users: users.map(user => ({
+        id: user._id,
         name: user.name,
+        email: user.email,
         created_at: user.created_at,
-        last_login: user.last_login
-      }))
+        last_login: user.last_login,
+        login_count: user.login_count || 0
+      })).sort((a, b) => new Date(b.last_login) - new Date(a.last_login))
     });
   } catch (error) {
     console.error('Error in /api/stats:', error);
-    res.status(500).json({ error: 'Failed to get statistics', details: error.message });
+    res.status(500).json({ success: false, error: 'Failed to get statistics' });
   }
 });
 

@@ -2,9 +2,10 @@
   publish = "public"
   command = ""  # No build command needed for static files
 
-# Disable secrets scanning for our environment variables
+# Configure secrets scanning to ignore specific environment variables
 [secrets]
-  scan = false
+  scan = true
+  scan_omitted_keys = ["MONGO_URI", "PORT", "SESSION_SECRET", "NODE_VERSION"]
 
 [build.environment]
   NODE_VERSION = "18"
